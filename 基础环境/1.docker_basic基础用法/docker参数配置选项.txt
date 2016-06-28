@@ -1,0 +1,24 @@
+这里有一份关于Docker网络配置的命令行选项列表，省去您查找相关资料的麻烦。
+一些网络配置的命令行选项只能在服务器启动时提供给Docker服务器。并且一旦启动起来就无法改变。
+一些网络配置命令选项只能在启动时提供给Docker服务器，并且在运行中不能改变:
+-b BRIDGE或--bridge=BRIDGE— see    建立自己的网桥
+--bip=CIDR— see    定制docker0
+-H SOCKET...或--host=SOCKET...—   它看起来像是在设置容器的网络，但实际却恰恰相反：它告诉Docker服务器要接收命令的通道，例如“run container"和"stop container"。
+--icc=true|false— see    容器间通信
+--ip=IP_ADDRESS— see    绑定容器端口
+--ip-forward=true|false— see    容器间通信
+--iptables=true|false— see   容器间通信
+--mtu=BYTES— see    定制docker0
+有两个网络配置选项可以在启动时或调用docker run时设置。当在启动时设置它会成为docker run的默认值:
+--dns=IP_ADDRESS...— see    配置DNS
+--dns-search=DOMAIN...— see    配置DNS
+最后，一些网络配置选项只能在调用docker run时指出，因为它们要为每个容器做特定的配置:
+-h HOSTNAME或--hostname=HOSTNAME— see    配置DNS 和  Docker与容器连接原理
+--link=CONTAINER_NAME:ALIAS— see   配置DNS and    容器间通信
+--net=bridge|none|container:NAME_or_ID|host— see   Docker与容器连接原理
+-p SPECor--publish=SPEC— see    绑定容器端口
+-P或--publish-all=true|false— see    绑定容器端口
+
+
+sudo ip route add 192.168.4.0/24 via 172.18.44.47 dev eno16777736
+route add 192.168.4.0 mask 255.255.255.0 172.18.44.47

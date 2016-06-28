@@ -1,0 +1,39 @@
+#指定镜像中心
+--bip=192.168.8.1/24 --insecure-registry 172.18.44.212:5000
+#拉取镜像
+sudo docker pull registry
+#启动镜像
+sudo docker run -d -p 5000:5000 -v /opt/data/registry:/tmp/registry registry
+#搜索镜像
+docker search 172.18.44.212:5000/
+#推送镜像
+docker push 172.18.44.212:5000/fastdfs_base:0.1
+
+docker tag xap/zookeeper_base:0.1 172.18.44.212:5000/zookeeper_base:0.1
+docker push 172.18.44.212:5000/zookeeper_base:0.1
+docker pull 172.18.44.212:5000/zookeeper_base:0.1
+docker tag 172.18.44.212:5000/zookeeper_base:0.1 xap/zookeeper_base:0.1 
+docker rmi 172.18.44.212:5000/zookeeper_base:0.1
+
+docker tag  xap/fastdfs_base:0.1 172.18.44.212:5000/fastdfs_base:0.1
+docker push 172.18.44.212:5000/fastdfs_base:0.1
+docker pull 172.18.44.212:5000/fastdfs_base:0.1
+docker tag  172.18.44.212:5000/fastdfs_base:0.1 xap/fastdfs_base:0.1
+docker rmi 172.18.44.212:5000/fastdfs_base:0.1
+
+docker tag  xap/rocketmq_base:0.1 172.18.44.212:5000/rocketmq_base:0.1
+docker push 172.18.44.212:5000/rocketmq_base:0.1
+docker pull 172.18.44.212:5000/rocketmq_base:0.1
+docker tag  172.18.44.212:5000/rocketmq_base:0.1 xap/rocketmq_base:0.1
+docker rmi  172.18.44.212:5000/rocketmq_base:0.1
+
+docker tag  xap/mywebsql:0.1 172.18.44.212:5000/mywebsql:0.1
+docker push 172.18.44.212:5000/mywebsql:0.1
+docker pull 172.18.44.212:5000/mywebsql:0.1
+docker tag  172.18.44.212:5000/mywebsql:0.1 xap/mywebsql:0.1
+docker rmi  172.18.44.212:5000/mywebsql:0.1
+
+docker tag  xap/mycat_base:0.1 172.18.44.212:5000/mycat_base:0.1
+docker push 172.18.44.212:5000/mycat_base:0.1
+docker pull 172.18.44.212:5000/mycat_base:0.1
+docker tag  172.18.44.212:5000/mycat_base:0.1 xap/mycat_base:0.1

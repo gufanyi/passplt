@@ -1,0 +1,91 @@
+1、安装依赖包：yum -y install openssl-devel wget kernel-devel
+
+2、安装开发工具：yum groupinstall "Development Tools"
+
+3、添加用户：adduser ovswitch，切换用户并跳转至用户文件夹：su - ovswitch
+
+4、下载源码：wget http://openvswitch.org/releases/openvswitch-2.3.0.tar.gz
+
+5、解压：tar xfz openvswitch-2.3.0.tar.gz
+
+6、创建编译目录：mkdir -p ~/rpmbuild/SOURCES
+
+7、从spec文件中删除openvswitch-kmod的依赖包，并创建一个新的spec文件：
+
+sed 's/openvswitch-kmod, //g' openvswitch-2.3.0/rhel/openvswitch.spec > openvswitch-2.3.0/rhel/openvswitch_no_kmod.spec
+
+8、开始编译：rpmbuild -bb --without check ~/openvswitch-2.3.0/rhel/openvswitch_no_kmod.spec
+
+可能出现以下错误：
+
+error: File /home/ovswitch/rpmbuild/SOURCES/openvswitch-2.3.0.tar.gz: No such file or directory
+
+解决办法：cp openvswitch-2.3.0.tar.gz rpmbuild/SOURCES
+
+9、退出当前用户使用root： exit
+
+10、安装编译生成的rpm文件：
+
+yum localinstall /home/ovswitch/rpmbuild/RPMS/x86_64/openvswitch-2.3.0-1.x86_64.rpm
+
+11、启动服务：systemctl start openvswitch.service
+
+12、查看服务状态：systemctl -l status openvswitch.service
+
+可能出现以下错误：
+
+openvswitch.service - LSB: Open vSwitch switch
+  Loaded: loaded (/etc/rc.d/init.d/openvswitch)
+  Active: activating (start) since 四 2014-12-04 18:35:32 CST; 1min 30s ago
+  Control: 13694 (openvswitch)
+  CGroup: /system.slice/openvswitch.service
+          ├─13694 /bin/sh /etc/rc.d/init.d/openvswitch start
+          ├─13696 /bin/sh /usr/share/openvswitch/scripts/ovs-ctl start --system-id=random
+          ├─13697 tee -a /var/log/openvswitch/ovs-ctl.log
+          ├─13723 ovs-vswitchd unix:/var/run/openvswitch/db.sock -vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir --log-file=/var/log/openvswitch/ovs-vswitchd.log --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --detach --monitor
+          ├─13724 ovs-vswitchd unix:/var/run/openvswitch/db.sock -vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir --log-file=/var/log/openvswitch/ovs-vswitchd.log --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --detach --monitor
+          └─13725 ovs-vswitchd unix:/var/run/openvswitch/db.sock -vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir --log-file=/var/log/openvswitch/ovs-vswitchd.log --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --detach --monitor
+
+12月 04 18:35:33 localhost.localdomain openvswitch[13694]: /etc/openvswitch/conf.db does not exist ... (warning).
+12月 04 18:35:33 localhost.localdomain openvswitch[13694]: Creating empty database /etc/openvswitch/conf.db ovsdb-tool: I/O error: /etc/openvswitch/conf.db: failed to lock lockfile (Resource temporarily unavailable)
+12月 04 18:35:33 localhost.localdomain openvswitch[13694]: [FAILED]
+12月 04 18:35:33 localhost.localdomain openvswitch[13694]: Inserting openvswitch module [  OK  ]
+
+解决办法：
+
+yum install policycoreutils-python.x86_64 0:2.2.5-11.el7
+
+mkdir /etc/openvswitch
+semanage fcontext -a -t openvswitch_rw_t "/etc/openvswitch(/.*)?"
+restorecon -Rv /etc/openvswitch
+
+再次使用:
+
+systemctl stop openvswitch.service
+
+systemctl start openvswitch.service
+
+再次查看服务状态：systemctl -l status openvswitch.service
+
+openvswitch.service - LSB: Open vSwitch switch
+  Loaded: loaded (/etc/rc.d/init.d/openvswitch)
+  Active: active (running) since 四 2014-12-04 18:38:52 CST; 6s ago
+  Process: 13741 ExecStart=/etc/rc.d/init.d/openvswitch start (code=exited, status=0/SUCCESS)
+  CGroup: /system.slice/openvswitch.service
+          ├─13724 ovs-vswitchd: monitoring pid 13725 (healthy)                                                                                                                                                                                    
+          ├─13725 ovs-vswitchd unix:/var/run/openvswitch/db.sock -vconsole:emer -vsyslog:err -vfile:info --mlockall --no-chdir --log-file=/var/log/openvswitch/ovs-vswitchd.log --pidfile=/var/run/openvswitch/ovs-vswitchd.pid --detach --monitor
+          ├─13764 ovsdb-server: monitoring pid 13765 (healthy)                                                                                                                                                                                                                                                                                                                                                        
+          └─13765 ovsdb-server /etc/openvswitch/conf.db -vconsole:emer -vsyslog:err -vfile:info --remote=punix:/var/run/openvswitch/db.sock --private-key=db:Open_vSwitch,SSL,private_key --certificate=db:Open_vSwitch,SSL,certificate --bootstrap-ca-cert=db:Open_vSwitch,SSL,ca_cert --no-chdir --log-file=/var/log/openvswitch/ovsdb-server.log --pidfile=/var/run/openvswitch/ovsdb-server.pid --detach --monitor
+
+12月 04 18:38:51 localhost.localdomain systemd[1]: Starting LSB: Open vSwitch switch...
+12月 04 18:38:51 localhost.localdomain openvswitch[13741]: /etc/openvswitch/conf.db does not exist ... (warning).
+12月 04 18:38:51 localhost.localdomain openvswitch[13741]: Creating empty database /etc/openvswitch/conf.db [  OK  ]
+12月 04 18:38:52 localhost.localdomain openvswitch[13741]: Starting ovsdb-server [  OK  ]
+12月 04 18:38:52 localhost.localdomain openvswitch[13741]: Configuring Open vSwitch system IDs [  OK  ]
+12月 04 18:38:52 localhost.localdomain openvswitch[13741]: ovs-vswitchd is already running.
+12月 04 18:38:52 localhost.localdomain openvswitch[13741]: Enabling remote OVSDB managers [  OK  ]
+12月 04 18:38:52 localhost.localdomain systemd[1]: Started LSB: Open vSwitch switch.
+12月 04 18:38:52 localhost.localdomain openvswitch[13694]: Starting ovs-vswitchd [  OK  ]
+12月 04 18:38:52 localhost.localdomain openvswitch[13694]: Enabling remote OVSDB managers [  OK  ]
+
+安装完成。
